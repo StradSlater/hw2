@@ -1,10 +1,11 @@
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 #include "book.h"
 
 using namespace std;
 
-Book::Book(const std::string isbn, const std::string author): Product("book", name_, price_, qty_),
+Book::Book(const std::string category, const std::string name, double price, int qty, const std::string isbn, const std::string author): Product("book", name, price, qty),
   isbn_(isbn),
   author_(author)
 {
@@ -13,6 +14,7 @@ Book::Book(const std::string isbn, const std::string author): Product("book", na
 
 Book::~Book()
 {
+  
 
 }
 
@@ -23,10 +25,14 @@ std::set<std::string> Book::keywords() const{
 }
 
 std::string Book::displayString() const{
-  std::string information = name_ + "\n" + "Author: " + author_ + " ISBN: " + isbn_ + "\n" + std::to_string(price_) + " " + std::to_string(qty_) + " left.";
+  std::string information = name_ + "\n" + "Author: " + author_ + " ISBN: " + isbn_ + "\n";
+  std::stringstream price_str;
+  price_str << std::fixed << std::setprecision(2) << price_;
+  std::string price_format = price_str.str();
+  information += price_format + " " + std::to_string(qty_) + " left.";
   return information;
 }
 
 void Book::dump(std::ostream& os) const{
-  os << displayString() << std::endl;
+  os << category_ << "\n" << name_ << "\n" << price_ << "\n" << qty_ << "\n" << isbn_ << "\n" << author_ << "\n";
 }
