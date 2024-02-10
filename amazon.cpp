@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
               if (ss >> user){
                 int index;
                 if(ss >> index){
-                  ds.addtoCart(user, index, hits);
+                    ds.addtoCart(user, index, hits);
                 }
               }
               
@@ -136,9 +136,7 @@ int main(int argc, char* argv[])
         }
 
     }
-    
     return 0;
-    
 }
 
 void displayProducts(vector<Product*>& hits)

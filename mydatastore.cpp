@@ -6,6 +6,8 @@ MyDataStore::MyDataStore(){
 
 }
 
+
+//clean up all allocated product object
 MyDataStore::~MyDataStore(){
   
   std::map<User*, std::vector<Product*>>::iterator it2;
@@ -22,7 +24,7 @@ MyDataStore::~MyDataStore(){
 
 }
 
-
+//adding a product to the database
 void MyDataStore::addProduct(Product* p){
   products_.insert(p);
   std::set<std::string> p_keys = p->keywords();
@@ -36,10 +38,12 @@ void MyDataStore::addProduct(Product* p){
   }
 }
 
+//adding a user to the database
 void MyDataStore::addUser(User* u){
   users_[u];
 }
 
+//search through the data base with keywords
 std::vector<Product*> MyDataStore::search(std::vector<std::string>& terms, int type){
   
   std::set<Product*> final;
@@ -83,21 +87,27 @@ std::vector<Product*> MyDataStore::search(std::vector<std::string>& terms, int t
   return hits;
 }
 
+//adding a product to the cart
 void MyDataStore::addtoCart(std::string user_name, int index, std::vector<Product*>& hits){
-  Product* p = hits[index-1];
-  std::map<User*, std::vector<Product*>>::iterator it1;
-  for (it1 = users_.begin(); it1 != users_.end(); ++it1){
-      User* u = it1->first;
-      std::string name = u->getName();
-      if (user_name == name){
-        users_[u].insert(users_[u].begin(), p);
-        
+    
+    Product* p = hits[index-1];
+    std::map<User*, std::vector<Product*>>::iterator it1;
+    for (it1 = users_.begin(); it1 != users_.end(); ++it1){
+        User* u = it1->first;
+        std::string name = u->getName();
+        if (user_name == name){
+          users_[u].push_back(p);
+          return;
+      }
     }
-  }
-  
+    if (it1 == users_.end()){
+      std::cout << "Invalid request" << std::endl;
+    }
+
+
 }
 
-
+//putting the data from the database onto an output file/quit
 void MyDataStore::dump(std::ostream& ofile){
   ofile << "<products>" << std::endl;
   std::set<Product*>::iterator it;
@@ -117,6 +127,7 @@ void MyDataStore::dump(std::ostream& ofile){
 
 }
 
+//viewing what is left in the cart
 void MyDataStore::viewcart(std::string user_name, std::ostream& os){
   std::map<User*, std::vector<Product*>>::iterator it1;
   for (it1 = users_.begin(); it1 != users_.end(); ++it1){
@@ -125,35 +136,48 @@ void MyDataStore::viewcart(std::string user_name, std::ostream& os){
       if (user_name == name){
         std::vector<Product*> cart= it1->second;
         std::vector<Product*>::iterator it1;
+        int index = 1;
         for (it1 = cart.begin(); it1 != cart.end(); ++it1){
           Product* p = *it1;
+          std::cout << "Item: " << index << std::endl;
           std::string output = p->displayString();
           std::cout << output << std::endl;
+          index++;
         }
+        break;
+      }
+      else if (it1 == std::prev(users_.end())){
+        std::cout << "Invalid username" << std::endl;
       }
   }
 }
+
+//buying what one can in the cart
 void MyDataStore::buycart(std::string user_name){
   std::map<User*, std::vector<Product*>>::iterator it1;
   for (it1 = users_.begin(); it1 != users_.end(); ++it1){
       User* u = it1->first;
       std::string name = u->getName();
       if (user_name == name){
-        std::vector<Product*> cart= it1->second;
-        std::vector<Product*>::iterator it;
-        for (it = cart.begin(); it != cart.end(); ++it){
-          Product* p = *it;
-          if ((p->getQty() > 0) && ((u->getBalance() - p->getPrice()) >= 0)){
-            p->subtractQty(1);
-            u->deductAmount(p->getPrice());
-            
-          }
-          
+        std::vector<Product*>& cart= it1->second;
+        std::vector<Product*>::iterator it = cart.begin();
+        while(it != cart.end()){
+            Product* p = *it;
+            if ((p->getQty() > 0) && ((u->getBalance() - p->getPrice()) >= 0)){
+              p->subtractQty(1);
+              u->deductAmount(p->getPrice());
+              it = cart.erase(it);
+            }
+            else{
+              ++it;
+            }
+        }
+        
+       
       }
-    }
-    else if (it1 == users_.end()){
-      std::cout << "Invalid username" << std::endl;
-    }
+      else if (it1 == std::prev(users_.end())){
+        std::cout << "Invalid username" << std::endl;
+      }
   }
   
   
